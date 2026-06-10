@@ -16,6 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import LiquidGlass from "./liquid-glass";
+import SettingsDropdown from "./settings-dropdown";
 
 const continental: { title: string; desc: string; link: string }[] = [
   {
@@ -104,6 +105,16 @@ export default function Navbar() {
     "continentals" | "rooms" | null
   >(null);
   const [isScrolled, setIsScrolled] = useState(false);
+  const navLinkStyle = cn(
+    navigationMenuTriggerStyle(),
+    "text-white/90 hover:text-white hover:bg-white/10 focus:bg-white/10 focus:text-white",
+    "data-[active]:bg-white/10 data-[active]:text-white",
+    "data-[state=open]:bg-white/10 data-[state=open]:text-white",
+    "data-open:bg-white/10 data-open:hover:bg-white/10 data-open:focus:bg-white/10 data-open:text-white",
+    "data-popup-open:bg-white/10 data-popup-open:hover:bg-white/10 data-popup-open:text-white",
+    "data-[active=true]:bg-white/10 data-[active=true]:hover:bg-white/10 data-[active=true]:focus:bg-white/10 data-[active=true]:text-white",
+    "cursor-pointer"
+  );
 
   useEffect(() => {
     const handleScroll = () => {
@@ -133,7 +144,7 @@ export default function Navbar() {
           <div className="flex items-center justify-between">
             <div>
               <Link href="/">
-                <h2>Viora</h2>
+                <h2 className="text-white font-semibold tracking-tight">Viora</h2>
               </Link>
             </div>
 
@@ -143,7 +154,7 @@ export default function Navbar() {
                   <NavigationMenuItem>
                     <NavigationMenuLink
                       asChild
-                      className={navigationMenuTriggerStyle()}
+                      className={navLinkStyle}
                     >
                       <Link href="/">Home</Link>
                     </NavigationMenuLink>
@@ -151,13 +162,13 @@ export default function Navbar() {
                   <NavigationMenuItem>
                     <NavigationMenuLink
                       asChild
-                      className={navigationMenuTriggerStyle()}
+                      className={navLinkStyle}
                     >
                       <Link href="/story">Story</Link>
                     </NavigationMenuLink>
                   </NavigationMenuItem>
                   <NavigationMenuItem>
-                    <NavigationMenuTrigger>Continentals</NavigationMenuTrigger>
+                    <NavigationMenuTrigger className={navLinkStyle}>Continentals</NavigationMenuTrigger>
                     <NavigationMenuContent>
                       <ul className="grid w-100 gap-2 p-4 md:w-125 md:grid-cols-2 lg:w-150">
                         {continental.map((item, index) => (
@@ -173,7 +184,7 @@ export default function Navbar() {
                     </NavigationMenuContent>
                   </NavigationMenuItem>
                   <NavigationMenuItem>
-                    <NavigationMenuTrigger>Rooms</NavigationMenuTrigger>
+                    <NavigationMenuTrigger className={navLinkStyle}>Rooms</NavigationMenuTrigger>
                     <NavigationMenuContent>
                       <ul className="grid w-100 gap-2 p-4 md:w-125 md:grid-cols-2 lg:w-150">
                         {rooms.map((item, index) => (
@@ -191,7 +202,7 @@ export default function Navbar() {
                   <NavigationMenuItem>
                     <NavigationMenuLink
                       asChild
-                      className={navigationMenuTriggerStyle()}
+                      className={navLinkStyle}
                     >
                       <Link href="/contact">Contact</Link>
                     </NavigationMenuLink>
@@ -200,25 +211,31 @@ export default function Navbar() {
               </NavigationMenu>
             </div>
 
-            <Button className="hidden md:inline-flex">Book Now</Button>
+            <div className="hidden md:flex items-center gap-3">
+              <SettingsDropdown />
+              <Button>Book Now</Button>
+            </div>
 
-            <button
-              className="md:hidden rounded-lg p-1.5 hover:bg-muted transition-colors"
-              onClick={() => setMobileOpen((prev) => !prev)}
-              aria-label={mobileOpen ? "Close menu" : "Open menu"}
-            >
-              <motion.span
-                animate={{ rotate: mobileOpen ? 90 : 0 }}
-                transition={{ duration: 0.2 }}
-                className="flex"
+            <div className="flex items-center gap-2 md:hidden">
+              <SettingsDropdown />
+              <button
+                className="rounded-lg p-1.5 text-white/90 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                onClick={() => setMobileOpen((prev) => !prev)}
+                aria-label={mobileOpen ? "Close menu" : "Open menu"}
               >
-                {mobileOpen ? (
-                  <XIcon className="size-5" />
-                ) : (
-                  <MenuIcon className="size-5" />
-                )}
-              </motion.span>
-            </button>
+                <motion.span
+                  animate={{ rotate: mobileOpen ? 90 : 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex"
+                >
+                  {mobileOpen ? (
+                    <XIcon className="size-5" />
+                  ) : (
+                    <MenuIcon className="size-5" />
+                  )}
+                </motion.span>
+              </button>
+            </div>
           </div>
 
           <AnimatePresence>
