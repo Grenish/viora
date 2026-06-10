@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
 import Navbar from "@/components/navbar";
+import { CurrencyProvider } from "@/lib/use-currency";
 
 const notoSansHeading = Noto_Sans({
   subsets: ["latin"],
@@ -42,8 +43,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Navbar />
-          {children}
+          <CurrencyProvider>
+            <Navbar />
+            {children}
+          </CurrencyProvider>
         </ThemeProvider>
       </body>
     </html>
