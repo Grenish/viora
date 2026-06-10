@@ -50,6 +50,7 @@
     /* custom background images */
     --background-image-hero: url("../public/hero-new.png");
     --background-image-book: url("../public/book.png");
+    --background-image-chef: url("../public/akira-takahashi.png");
 }
 
 :root {
