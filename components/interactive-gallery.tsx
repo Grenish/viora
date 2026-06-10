@@ -12,10 +12,11 @@ import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
 import { Card } from "./ui/card";
 
-// Types
 interface GalleryContextValue {
   activeId: string | null;
   setActiveId: (id: string | null) => void;
+  activeIndex: number;
+  setActiveIndex: (index: number) => void;
   count: number;
 }
 
@@ -27,6 +28,7 @@ interface InteractiveGalleryProps {
 interface InteractiveGalleryGroupProps {
   children: React.ReactNode;
   className?: string;
+  index?: number;
 }
 
 interface InteractiveGalleryMediaProps {
@@ -43,19 +45,18 @@ interface InteractiveGalleryContentProps {
   className?: string;
 }
 
-// Contexts
 const GalleryContext = createContext<GalleryContextValue | null>(null);
 
 function useGallery(): GalleryContextValue {
   const ctx = useContext(GalleryContext);
-  if (!ctx)
+  if (!ctx) {
     throw new Error(
       "InteractiveGallery compound components must be used within <InteractiveGallery>",
     );
+  }
   return ctx;
 }
 
-// Spring presets (fine-tuned for buttery-smooth fluid transitions)
 const springLayout = {
   type: "spring" as const,
   stiffness: 180,
@@ -70,47 +71,66 @@ const springContent = {
   mass: 0.8,
 };
 
-// Wrap Card with motion
 const MotionCard = motion.create(Card);
 
-// InteractiveGallery (root)
 function InteractiveGallery({ children, className }: InteractiveGalleryProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   const childArray = React.Children.toArray(children);
   const count = childArray.length;
 
   const ctx = useMemo<GalleryContextValue>(
-    () => ({ activeId, setActiveId, count }),
-    [activeId, count],
+    () => ({ activeId, setActiveId, activeIndex, setActiveIndex, count }),
+    [activeId, activeIndex, count],
   );
+
+  const childrenWithIndex = React.Children.map(children, (child, index) => {
+    if (React.isValidElement(child)) {
+      return React.cloneElement(child as React.ReactElement<InteractiveGalleryGroupProps>, { index });
+    }
+    return child;
+  });
 
   return (
     <GalleryContext.Provider value={ctx}>
       <div
         className={cn(
-          "flex flex-col md:flex-row gap-3 w-full h-auto md:h-120",
+          "relative md:flex md:flex-row gap-3 w-full h-105 md:h-120 overflow-x-clip md:overflow-x-visible",
           className,
         )}
         onMouseLeave={() => setActiveId(null)}
       >
-        {children}
+        {childrenWithIndex}
+
+        <div className="absolute -bottom-6 left-0 right-0 flex justify-center gap-1.5 md:hidden">
+          {Array.from({ length: count }).map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setActiveIndex(i)}
+              className={cn(
+                "w-2 h-2 rounded-full transition-all duration-300",
+                i === activeIndex ? "bg-foreground w-4" : "bg-foreground/25",
+              )}
+              aria-label={`Go to slide ${i + 1}`}
+            />
+          ))}
+        </div>
       </div>
     </GalleryContext.Provider>
   );
 }
 
-// InteractiveGalleryGroup
 function InteractiveGalleryGroup({
   children,
   className,
+  index = 0,
 }: InteractiveGalleryGroupProps) {
   const id = useId();
-  const { activeId, setActiveId, count } = useGallery();
+  const { activeId, setActiveId } = useGallery();
   const isActive = activeId === id;
   const hasActive = activeId !== null;
 
-  // Separate media and content children based on their props, ensuring full compatibility with Server Component rendering
   const childArray = React.Children.toArray(children);
 
   const mediaChild = childArray.find((child) => {
@@ -127,7 +147,6 @@ function InteractiveGalleryGroup({
 
   return (
     <>
-      {/* ── Desktop card ── */}
       <MotionCard
         className={cn(
           "hidden md:flex flex-col relative cursor-pointer p-0 gap-0 select-none",
@@ -149,7 +168,6 @@ function InteractiveGalleryGroup({
         role="button"
         aria-expanded={isActive}
       >
-        {/* Image area */}
         <motion.div
           className="relative w-full overflow-hidden shrink-0"
           transition={springLayout}
@@ -160,7 +178,6 @@ function InteractiveGalleryGroup({
           {mediaChild}
         </motion.div>
 
-        {/* Overlay gradient for inactive cards */}
         <AnimatePresence>
           {!isActive && (
             <motion.div
@@ -173,7 +190,6 @@ function InteractiveGalleryGroup({
           )}
         </AnimatePresence>
 
-        {/* Content area — only visible when active */}
         <AnimatePresence>
           {isActive && contentChild && (
             <motion.div
@@ -190,7 +206,6 @@ function InteractiveGalleryGroup({
           )}
         </AnimatePresence>
 
-        {/* Title preview in strip mode (inactive, with an active card present) */}
         <AnimatePresence>
           {hasActive && !isActive && (
             <motion.div
@@ -200,17 +215,14 @@ function InteractiveGalleryGroup({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
             >
-              {/* Pulls first heading from content for the strip label */}
               <StripLabel>{contentChild}</StripLabel>
             </motion.div>
           )}
         </AnimatePresence>
       </MotionCard>
 
-      {/* ── Mobile card ── */}
       <MobileCard
-        isActive={isActive}
-        onToggle={() => setActiveId(isActive ? null : id)}
+        index={index}
         mediaChild={mediaChild}
         contentChild={contentChild}
         className={className}
@@ -219,16 +231,13 @@ function InteractiveGalleryGroup({
   );
 }
 
-// StripLabel — extracts the first heading text for inactive strip preview
 function StripLabel({ children }: { children: React.ReactNode }) {
   if (!React.isValidElement(children)) return null;
   const element = children as React.ReactElement<{ children: React.ReactNode }>;
 
-  // InteractiveGalleryContent wraps user children
   const inner = element.props.children;
   const childArray = React.Children.toArray(inner);
 
-  // Find the first heading-like element
   const heading = childArray.find(
     (child) =>
       React.isValidElement(child) &&
@@ -248,96 +257,76 @@ function StripLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-// MobileCard — accordion-style expansion for small screens
 function MobileCard({
-  isActive,
-  onToggle,
+  index,
   mediaChild,
   contentChild,
   className,
 }: {
-  isActive: boolean;
-  onToggle: () => void;
+  index: number;
   mediaChild: React.ReactNode;
   contentChild: React.ReactNode;
   className?: string;
 }) {
+  const { activeIndex, setActiveIndex, count } = useGallery();
+
+  const relativeIndex = (index - activeIndex + count) % count;
+  const isTop = relativeIndex === 0;
+
+  const handleCycle = () => {
+    if (isTop) {
+      setActiveIndex((activeIndex + 1) % count);
+    } else {
+      setActiveIndex(index);
+    }
+  };
+
+  const scale = 1 - relativeIndex * 0.05;
+  const yOffset = relativeIndex * 16;
+  const zIndex = 30 - relativeIndex * 10;
+  const opacity = relativeIndex === 0 ? 1 : 0.85 - relativeIndex * 0.15;
+
   return (
-    <MotionCard
-      className={cn(
-        "md:hidden flex flex-col relative cursor-pointer p-0 gap-0 select-none",
-        isActive && "shadow-lg ring-foreground/10",
-        className,
-      )}
-      transition={springLayout}
-      onClick={onToggle}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onToggle();
+    <motion.div
+      style={{ zIndex, touchAction: "pan-y" }}
+      drag={isTop ? "x" : false}
+      dragConstraints={{ left: 0, right: 0 }}
+      dragElastic={0.6}
+      onDragEnd={(event, info) => {
+        if (info.offset.x > 80) {
+          setActiveIndex((activeIndex - 1 + count) % count);
+        } else if (info.offset.x < -80) {
+          setActiveIndex((activeIndex + 1) % count);
         }
       }}
-      tabIndex={0}
-      role="button"
-      aria-expanded={isActive}
+      animate={{
+        scale,
+        y: yOffset,
+        opacity,
+      }}
+      transition={springContent}
+      onClick={handleCycle}
+      className={cn(
+        "md:hidden absolute inset-x-0 mx-auto w-[86vw] xs:w-[290px] sm:w-82.5 h-85 xs:h-[360px] sm:h-95 cursor-pointer origin-top select-none rounded-3xl border border-border/50 shadow-md bg-card overflow-hidden flex flex-col",
+        className,
+      )}
     >
-      {/* Image — shorter when collapsed, taller when active */}
-      <motion.div
-        className="relative w-full overflow-hidden"
-        transition={springLayout}
-        animate={{ height: isActive ? 240 : 160 }}
-      >
+      <div className="relative w-full h-40 xs:h-44 sm:h-48 overflow-hidden shrink-0">
         {mediaChild}
-
-        {/* Gradient overlay when collapsed */}
-        <AnimatePresence>
-          {!isActive && (
-            <motion.div
-              className="absolute inset-0 bg-linear-to-t from-background/50 via-transparent to-transparent pointer-events-none"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            />
-          )}
-        </AnimatePresence>
-
-        {/* Collapsed label */}
-        <AnimatePresence>
-          {!isActive && (
-            <motion.div
-              className="absolute bottom-0 left-0 right-0 p-3"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-            >
-              <StripLabel>{contentChild}</StripLabel>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-
-      {/* Content — accordion expand */}
-      <AnimatePresence>
-        {isActive && contentChild && (
-          <motion.div
-            key="mobile-content"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={springContent}
-            style={{ overflow: "hidden" }}
-          >
-            <div className="px-4 py-3">{contentChild}</div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </MotionCard>
+      </div>
+      <div className="px-5 py-4 flex-1 flex flex-col justify-start bg-card text-card-foreground overflow-hidden">
+        <motion.div
+          animate={{ opacity: isTop ? 1 : 0 }}
+          transition={{ duration: 0.15 }}
+          className="h-full"
+        >
+          {contentChild}
+        </motion.div>
+      </div>
+    </motion.div>
   );
 }
 
-// InteractiveGalleryMedia
 function InteractiveGalleryMedia({
   src,
   alt,
@@ -363,7 +352,6 @@ function InteractiveGalleryMedia({
   );
 }
 
-// InteractiveGalleryContent
 function InteractiveGalleryContent({
   children,
   className,
@@ -376,7 +364,7 @@ function InteractiveGalleryContent({
         "[&>h2]:font-heading [&>h2]:text-lg [&>h2]:font-semibold [&>h2]:tracking-tight",
         "[&>h3]:font-heading [&>h3]:text-base [&>h3]:font-semibold [&>h3]:tracking-tight",
         "[&>h4]:font-heading [&>h4]:text-sm [&>h4]:font-semibold",
-        "[&>p]:text-sm [&>p]:text-muted-foreground [&>p]:leading-relaxed",
+        "[&>p]:text-xs xs:text-sm [&>p]:text-muted-foreground [&>p]:leading-relaxed [&>p]:line-clamp-3",
         className,
       )}
     >
