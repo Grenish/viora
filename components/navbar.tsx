@@ -15,7 +15,6 @@ import {
 } from "./ui/navigation-menu";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
-import LiquidGlass from "./liquid-glass";
 import SettingsDropdown from "./settings-dropdown";
 
 const continental: { title: string; desc: string; link: string }[] = [
@@ -113,7 +112,7 @@ export default function Navbar() {
     "data-open:bg-white/10 data-open:hover:bg-white/10 data-open:focus:bg-white/10 data-open:text-white",
     "data-popup-open:bg-white/10 data-popup-open:hover:bg-white/10 data-popup-open:text-white",
     "data-[active=true]:bg-white/10 data-[active=true]:hover:bg-white/10 data-[active=true]:focus:bg-white/10 data-[active=true]:text-white",
-    "cursor-pointer"
+    "cursor-pointer",
   );
 
   useEffect(() => {
@@ -129,22 +128,19 @@ export default function Navbar() {
 
   return (
     <header className="w-full py-4 px-4 md:px-8 fixed top-0 z-40 pointer-events-none overflow-x-clip">
-      <LiquidGlass
+      <div
         className={cn(
-          "w-full sm:w-11/12 md:w-10/12 max-w-full mx-auto border rounded-full pointer-events-auto transition-[width] duration-300 ease-in-out",
+          "w-full sm:w-11/12 md:w-10/12 max-w-full mx-auto border border-border/40 rounded-full pointer-events-auto bg-background/80 backdrop-blur-md transition-[width] duration-300 ease-in-out shadow-xs",
           isScrolled && "md:w-5xl",
         )}
-        radius={28}
-        bezel={20}
-        thickness={70}
-        ior={50}
-        blur={2}
       >
         <nav className="w-full py-2 px-4">
           <div className="flex items-center justify-between">
             <div>
               <Link href="/">
-                <h2 className="text-white font-semibold tracking-tight">Viora</h2>
+                <h2 className="text-white font-semibold tracking-tight">
+                  Viora
+                </h2>
               </Link>
             </div>
 
@@ -152,23 +148,19 @@ export default function Navbar() {
               <NavigationMenu>
                 <NavigationMenuList>
                   <NavigationMenuItem>
-                    <NavigationMenuLink
-                      asChild
-                      className={navLinkStyle}
-                    >
+                    <NavigationMenuLink asChild className={navLinkStyle}>
                       <Link href="/">Home</Link>
                     </NavigationMenuLink>
                   </NavigationMenuItem>
                   <NavigationMenuItem>
-                    <NavigationMenuLink
-                      asChild
-                      className={navLinkStyle}
-                    >
+                    <NavigationMenuLink asChild className={navLinkStyle}>
                       <Link href="/story">Story</Link>
                     </NavigationMenuLink>
                   </NavigationMenuItem>
                   <NavigationMenuItem>
-                    <NavigationMenuTrigger className={navLinkStyle}>Continentals</NavigationMenuTrigger>
+                    <NavigationMenuTrigger className={navLinkStyle}>
+                      Continentals
+                    </NavigationMenuTrigger>
                     <NavigationMenuContent>
                       <ul className="grid w-100 gap-2 p-4 md:w-125 md:grid-cols-2 lg:w-150">
                         {continental.map((item, index) => (
@@ -184,7 +176,9 @@ export default function Navbar() {
                     </NavigationMenuContent>
                   </NavigationMenuItem>
                   <NavigationMenuItem>
-                    <NavigationMenuTrigger className={navLinkStyle}>Rooms</NavigationMenuTrigger>
+                    <NavigationMenuTrigger className={navLinkStyle}>
+                      Rooms
+                    </NavigationMenuTrigger>
                     <NavigationMenuContent>
                       <ul className="grid w-100 gap-2 p-4 md:w-125 md:grid-cols-2 lg:w-150">
                         {rooms.map((item, index) => (
@@ -200,10 +194,7 @@ export default function Navbar() {
                     </NavigationMenuContent>
                   </NavigationMenuItem>
                   <NavigationMenuItem>
-                    <NavigationMenuLink
-                      asChild
-                      className={navLinkStyle}
-                    >
+                    <NavigationMenuLink asChild className={navLinkStyle}>
                       <Link href="/contact">Contact</Link>
                     </NavigationMenuLink>
                   </NavigationMenuItem>
@@ -213,7 +204,9 @@ export default function Navbar() {
 
             <div className="hidden md:flex items-center gap-3">
               <SettingsDropdown />
-              <Button>Book Now</Button>
+              <Link href="/reserve">
+                <Button>Book Now</Button>
+              </Link>
             </div>
 
             <div className="flex items-center gap-2 md:hidden">
@@ -350,13 +343,19 @@ export default function Navbar() {
                 </MobileNavLink>
 
                 <div className="pt-2">
-                  <Button className="w-full">Book Now</Button>
+                  <Link
+                    href="/reserve"
+                    onClick={() => setMobileOpen(false)}
+                    className="w-full block"
+                  >
+                    <Button className="w-full">Book Now</Button>
+                  </Link>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
         </nav>
-      </LiquidGlass>
+      </div>
     </header>
   );
 }
