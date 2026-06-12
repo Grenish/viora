@@ -1,4 +1,5 @@
 import { Button } from "./ui/button";
+import Link from "next/link";
 import {
   InteractiveGallery,
   InteractiveGalleryContent,
@@ -46,7 +47,7 @@ export default function HomePage() {
             Food continues to evolve reflecting humanity&apos;s creativity and
             cultural diversity
           </h1>
-          <p className="max-w-2xl text-center text-xs sm:text-base text-muted">
+          <p className="max-w-2xl text-center text-xs sm:text-base text-muted-foreground">
             International spice markets offer aromatic treasures from distant
             regions. The perfect bechamel requires constant whisking and proper
             thickness.
@@ -55,12 +56,14 @@ export default function HomePage() {
             <Button className="h-8 px-3 text-xs sm:h-10 sm:px-4 sm:text-sm">
               Explore Viora
             </Button>
-            <Button
-              variant="outline"
-              className="h-8 px-3 text-xs sm:h-10 sm:px-4 sm:text-sm"
-            >
-              Reserve a Table
-            </Button>
+            <Link href="/reserve">
+              <Button
+                variant="outline"
+                className="h-8 px-3 text-xs sm:h-10 sm:px-4 sm:text-sm cursor-pointer"
+              >
+                Reserve a Table
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
