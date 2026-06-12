@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Public_Sans, Noto_Sans } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import { ThemeProvider } from "@/components/theme-provider";
 import Navbar from "@/components/navbar";
+import Footer from "@/components/footer";
 import { CurrencyProvider } from "@/lib/use-currency";
 
 const notoSansHeading = Noto_Sans({
@@ -29,6 +29,7 @@ export default function RootLayout({
       lang="en"
       suppressHydrationWarning
       className={cn(
+        "dark",
         "h-full",
         "antialiased",
         "font-sans",
@@ -37,17 +38,11 @@ export default function RootLayout({
       )}
     >
       <body className="min-h-full flex flex-col overflow-x-hidden">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <CurrencyProvider>
-            <Navbar />
-            {children}
-          </CurrencyProvider>
-        </ThemeProvider>
+        <CurrencyProvider>
+          <Navbar />
+          {children}
+          <Footer />
+        </CurrencyProvider>
       </body>
     </html>
   );
